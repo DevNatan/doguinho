@@ -3,8 +3,9 @@ import initDoguinho from "./loader";
 import { RouterOptions } from "vue-router";
 import { Store } from "vuex";
 import { Container, interfaces } from "inversify";
-import { ModuleConstructor, ModuleRegistry } from "./module";
+import { ModuleRegistry } from "./module";
 import { Injector } from "./injector";
+import { Constructor } from "./utils";
 
 export * from "./injector";
 export * from "./module";
@@ -19,7 +20,7 @@ export type DoguinhoAutoRegister = {
 
 export type DoguinhoOptions<S = any> = {
     autoRegister?: true | DoguinhoAutoRegister;
-    modules?: ModuleConstructor[];
+    modules?: Constructor[];
     containerOptions?: ContainerOptions;
     routerOptions?: RouterOptions
     store?: Store<S>

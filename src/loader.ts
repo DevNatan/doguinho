@@ -1,7 +1,6 @@
 import {
     DoguinhoModule,
     ModuleCache,
-    ModuleConstructor,
     ModuleContext,
     ModuleMetadataKey, ModuleOptions,
 } from "./module";
@@ -34,7 +33,7 @@ function autoLoadModules(init: InitContext, path: string, pattern: RegExp) {
         loadModule(init, module);
 }
 
-function loadModule(ctx: InitContext, constructor: ModuleConstructor) {
+function loadModule(ctx: InitContext, constructor: Constructor) {
     const cname = constructor.name;
     const name = fixModuleName(cname);
     if (ctx.cache[name])
@@ -48,22 +47,27 @@ function loadModule(ctx: InitContext, constructor: ModuleConstructor) {
     defineProperty(module, "qualifiedName", cname);
 
     const moduleCtx: ModuleContext = Object.assign({ module }, ctx.injector);
-    module.beforeInit(moduleCtx);
-    initModule(ctx, moduleCtx, Reflect.getMetadata(ModuleMetadataKey, constructor), module);
+    const options: ModuleOptions | undefined =  Reflect.getMetadata(ModuleMetadataKey, constructor);
+
+    if (options && options.beforeInit)
+        options.beforeInit(moduleCtx);
+
+    defineProperty(module, "options", options || {});
+    initModule(ctx, moduleCtx, options, module);
 }
 
 function initModule(
     initContext: InitContext,
     moduleContext: ModuleContext,
-    moduleOptions: ModuleOptions,
+    moduleOptions: ModuleOptions | undefined,
     module: DoguinhoModule
 ): void {
-    if (moduleOptions.providers) {
+    if (moduleOptions && moduleOptions.providers) {
         for (const service of moduleOptions.providers)
             initContext.injector.inject(service)
     }
 
-    module.init(moduleContext)
+    initContext.cache[module.name] = moduleContext;
 }
 
 function defineProperty(target: any, prop: PropertyKey, value: any): void {
@@ -173,9 +177,17 @@ export default (options?: DoguinhoOptions): Doguinho => {
         }
     }
 
+    for (const name in cache) {
+        if (!cache.hasOwnProperty(name))
+            continue;
+
+        const ctx = cache[name];
+        ctx.module.options.init(ctx);
+    }
+
     const registry = {
         get(name: string): DoguinhoModule {
-            return cache[name]
+            return cache[name]?.module
         },
         has(name: string): boolean {
             return typeof cache[name] !== "undefined";

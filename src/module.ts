@@ -1,14 +1,13 @@
 import { Injector, Providers } from "./injector";
-import { Constructor } from "./utils";
-
-export type ModuleConstructor = Constructor<DoguinhoModule>
 
 export interface ModuleContext extends Injector {
   readonly module: DoguinhoModule
 }
 
 export interface ModuleOptions {
-  providers?: Providers
+  providers?: Providers,
+  beforeInit(context: ModuleContext): void,
+  init(context: ModuleContext): void
 }
 
 export const ModuleMetadataKey = Symbol("doguinho:module");
@@ -22,12 +21,10 @@ export function Module(options?: ModuleOptions) {
 export class DoguinhoModule {
   readonly name!: string;
   readonly qualifiedName!: string;
-
-  beforeInit(context: ModuleContext): void {}
-  init(context: ModuleContext): void {}
+  readonly options!: ModuleOptions;
 }
 
-export type ModuleCache = { [key: string]: DoguinhoModule };
+export type ModuleCache = { [key: string]: ModuleContext };
 
 export interface ModuleRegistry {
   get(name: string): DoguinhoModule | undefined;
