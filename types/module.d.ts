@@ -4,11 +4,11 @@ export interface ModuleContext extends Injector {
 }
 export interface ModuleOptions {
     providers?: Providers;
-    beforeInit(context: ModuleContext): void;
-    init(context: ModuleContext): void;
+    beforeInit?(context: ModuleContext): void;
+    init?(context: ModuleContext): void;
 }
-export declare const ModuleMetadataKey: unique symbol;
-export declare function Module(options?: ModuleOptions): (target: Function) => void;
+export declare const ModuleMetadataKey = "doguinho:module";
+export declare function Module(options?: ModuleOptions): ClassDecorator;
 export declare class DoguinhoModule {
     readonly name: string;
     readonly qualifiedName: string;

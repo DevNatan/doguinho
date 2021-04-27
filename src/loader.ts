@@ -18,6 +18,7 @@ import { Container } from "inversify";
 type InitContext = { cache: ModuleCache, injector: Injector }
 
 function autoLoadModules(init: InitContext, path: string, pattern: RegExp) {
+    console.log(`[dog] [auto load] @ \"${path}\"...`);
     const ctx = require.context(path, true, pattern, "sync");
     const files = ctx.keys().map((name: string) => {
         return { name, module: new (ctx(name).default)() };
@@ -35,11 +36,13 @@ function autoLoadModules(init: InitContext, path: string, pattern: RegExp) {
 
 function loadModule(ctx: InitContext, constructor: Constructor) {
     const cname = constructor.name;
+    console.log("[dog] [module] loading", cname);
+
     const name = fixModuleName(cname);
     if (ctx.cache[name])
         throw new Error(`Module ${name} already loaded`)
 
-    if (!Reflect.hasMetadata(ModuleMetadataKey, constructor))
+    if (!Reflect.hasOwnMetadata(ModuleMetadataKey, constructor))
         throw new Error(`${cname} is not a Module (no @Module decorator found)`)
 
     const module = new constructor();
@@ -47,7 +50,7 @@ function loadModule(ctx: InitContext, constructor: Constructor) {
     defineProperty(module, "qualifiedName", cname);
 
     const moduleCtx: ModuleContext = Object.assign({ module }, ctx.injector);
-    const options: ModuleOptions | undefined =  Reflect.getMetadata(ModuleMetadataKey, constructor);
+    const options: ModuleOptions | undefined = Reflect.getMetadata(ModuleMetadataKey, constructor);
 
     if (options && options.beforeInit)
         options.beforeInit(moduleCtx);
@@ -68,6 +71,7 @@ function initModule(
     }
 
     initContext.cache[module.name] = moduleContext;
+    console.log("[dog] [module] ready", module.qualifiedName);
 }
 
 function defineProperty(target: any, prop: PropertyKey, value: any): void {
@@ -145,6 +149,7 @@ function buildInjector(cache: InjectorCache, container: Container): Injector {
 }
 
 export default (options?: DoguinhoOptions): Doguinho => {
+    console.log("[dog] starting...");
     let containerOptions: ContainerOptions = {
         autoBindInjectable: false,
         skipBaseClassChecks: true,
@@ -172,6 +177,7 @@ export default (options?: DoguinhoOptions): Doguinho => {
         }
 
         if (options.modules) {
+            console.log("[dog] loading defined modules...");
             for (const module of options.modules)
                 loadModule(init, module)
         }
@@ -182,7 +188,7 @@ export default (options?: DoguinhoOptions): Doguinho => {
             continue;
 
         const ctx = cache[name];
-        ctx.module.options.init(ctx);
+        ctx.module.options.init?.(ctx);
     }
 
     const registry = {
@@ -194,6 +200,7 @@ export default (options?: DoguinhoOptions): Doguinho => {
         }
     };
 
+    console.log("[dog] started");
     return {
         container,
         injector,

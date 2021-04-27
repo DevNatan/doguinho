@@ -4,5 +4,8 @@
     "@babel/preset-typescript",
     "@babel/preset-flow"
   ],
-  "plugins": ["transform-require-context"]
+  "plugins": [
+    "transform-require-context",
+    ["@babel/plugin-proposal-decorators", { "legacy": true }]
+  ]
 }

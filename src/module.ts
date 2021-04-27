@@ -6,15 +6,15 @@ export interface ModuleContext extends Injector {
 
 export interface ModuleOptions {
   providers?: Providers,
-  beforeInit(context: ModuleContext): void,
-  init(context: ModuleContext): void
+  beforeInit?(context: ModuleContext): void,
+  init?(context: ModuleContext): void
 }
 
-export const ModuleMetadataKey = Symbol("doguinho:module");
+export const ModuleMetadataKey = "doguinho:module";
 
-export function Module(options?: ModuleOptions) {
+export function Module(options?: ModuleOptions): ClassDecorator {
   return (target: Function) => {
-    Reflect.defineMetadata(ModuleMetadataKey, options, target.prototype);
+    Reflect.defineMetadata(ModuleMetadataKey, options, target);
   }
 }
 
