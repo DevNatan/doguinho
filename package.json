@@ -1,6 +1,6 @@
 {
   "name": "doguinho",
-  "version": "0.0.4",
+  "version": "0.0.5-0",
   "description": "IoC and DI for Vue.js 2 with InversifyJS inspired by NestJS",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
