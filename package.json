@@ -1,0 +1,43 @@
+{
+  "name": "doguinho",
+  "version": "0.0.1",
+  "description": "IoC and DI for Vue.js 2 with InversifyJS inspired by NestJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx babel --extensions \".ts\" src --out-dir lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevNatan/doguinho.git"
+  },
+  "keywords": [
+    "ioc",
+    "di",
+    "vue",
+    "inversify",
+    "dependency injection",
+    "framework"
+  ],
+  "author": "DevNatan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DevNatan/doguinho/issues"
+  },
+  "homepage": "https://github.com/DevNatan/doguinho#readme",
+  "dependencies": {
+    "babel-plugin-transform-require-context": "^0.1.1",
+    "inversify": "^5.1.1",
+    "reflect-metadata": "^0.1.13",
+    "vue": "^2.6.12"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.13.16",
+    "@babel/core": "^7.13.16",
+    "@babel/preset-env": "^7.13.15",
+    "@babel/preset-flow": "^7.13.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "@types/webpack-env": "^1.16.0",
+    "typescript": "^3.9.7"
+  }
+}
