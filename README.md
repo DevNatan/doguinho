@@ -1,6 +1,8 @@
 # doguinho
 IoC and DI for Vue with InversifyJS inspired by NestJS
 
+[![Node.js Package](https://github.com/DevNatan/doguinho/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/DevNatan/doguinho/actions/workflows/npm-publish.yml)
+
 ## Requirements
 * Vue 2.x
 * [reflect-metadata](https://github.com/rbuckton/reflect-metadata)

@@ -17,23 +17,6 @@ import { Container } from "inversify";
 
 type InitContext = { cache: ModuleCache, injector: Injector }
 
-function autoLoadModules(init: InitContext, path: string, pattern: RegExp) {
-    console.log(`[dog] [auto load] @ \"${path}\"...`);
-    const ctx = require.context(path, true, pattern, "sync");
-    const files = ctx.keys().map((name: string) => {
-        return { name, module: new (ctx(name).default)() };
-    });
-
-    for (const { name, module } of files) {
-        if (!(module instanceof DoguinhoModule))
-            throw new Error(`Default export of ${name} must extend Module`);
-    }
-
-    const modules = files.map((value) => value.module);
-    for (const module of modules)
-        loadModule(init, module);
-}
-
 function loadModule(ctx: InitContext, constructor: Constructor) {
     const cname = constructor.name;
     console.log("[dog] [module] loading", cname);
@@ -170,10 +153,16 @@ export default (options?: DoguinhoOptions): Doguinho => {
     if (options) {
         if (options.autoRegister) {
             const autoRegister = options.autoRegister as any;
-            autoLoadModules(init,
-                autoRegister.path || ".",
-                autoRegister.pattern || /^.*\.module.(ts|js)$/m
-            );
+            const path = autoRegister.path || "/";
+
+            console.log("[dog] [auto load] path:", path);
+            const ctx = require.context(path, true,
+                autoRegister.pattern || /^.*\.module.(ts|js)$/m, "sync");
+            const keys = ctx.keys();
+
+            console.log("[dog] [auto load] keys:", keys);
+            for (const key of keys)
+                loadModule(init, ctx(key));
         }
 
         if (options.modules) {
