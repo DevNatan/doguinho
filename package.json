@@ -10,6 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/DevNatan/doguinho.git"
   },
+  "main": "lib/index.js",
   "keywords": [
     "ioc",
     "di",
