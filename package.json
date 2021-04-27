@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx babel --extensions \".ts\" src --out-dir lib"
+    "build": "tsc && npx babel --extensions \".ts\" src --out-dir lib"
   },
   "repository": {
     "type": "git",
@@ -19,12 +19,19 @@
     "dependency injection",
     "framework"
   ],
-  "author": "DevNatan",
+  "author": {
+    "name": "Natan Vieira"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/DevNatan/doguinho/issues"
   },
+  "files": [
+    "dist/**/*",
+    "types/vue.d.ts"
+  ],
   "homepage": "https://github.com/DevNatan/doguinho#readme",
+  "types": "types/index.d.ts",
   "dependencies": {
     "babel-plugin-transform-require-context": "^0.1.1",
     "inversify": "^5.1.1",
@@ -38,6 +45,8 @@
     "@babel/preset-flow": "^7.13.13",
     "@babel/preset-typescript": "^7.13.0",
     "@types/webpack-env": "^1.16.0",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.7",
+    "vue-router": "^3.2.0",
+    "vuex": "^3.4.0"
   }
 }
