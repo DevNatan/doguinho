@@ -8,7 +8,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DevNatan/doguinho.git"
+    "url": "git://github.com/DevNatan/doguinho.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "main": "lib/index.js",
   "keywords": [
