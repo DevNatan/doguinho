@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import initDoguinho from "./loader";
 import { RouterOptions } from "vue-router";
 import { Store } from "vuex";

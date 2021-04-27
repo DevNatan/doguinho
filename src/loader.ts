@@ -1,7 +1,15 @@
-import { Module, ModuleCache, ModuleConstructor, ModuleContext, ModuleRegistry } from "./module";
 import {
+    DoguinhoModule,
+    ModuleCache,
+    ModuleConstructor,
+    ModuleContext,
+    ModuleMetadataKey, ModuleOptions,
+    ModuleRegistry
+} from "./module";
+import {
+    assignFn,
     Constructor,
-    ContainerOptions, decorate,
+    ContainerOptions, decorate, DefaultInjectionScope,
     Doguinho,
     DoguinhoOptions,
     fixModuleName, Injectable, InjectionScope,
@@ -12,45 +20,51 @@ import { Container } from "inversify";
 type InitContext = { cache: ModuleCache, injector: Injector }
 
 function autoLoadModules(init: InitContext, path: string, pattern: RegExp) {
-    console.log(`[dog] loading modules (path = ${path}, pattern = ${pattern})`);
     const ctx = require.context(path, true, pattern, "sync");
-    console.log(`[dog] ctx`, ctx.keys());
     const files = ctx.keys().map((name: string) => {
-        console.log("[dog] [module]", name);
         return { name, module: new (ctx(name).default)() };
     });
 
-    console.log("[dog] files", files);
     for (const { name, module } of files) {
-        if (!(module instanceof Module))
+        if (!(module instanceof DoguinhoModule))
             throw new Error(`Default export of ${name} must extend Module`);
     }
 
     const modules = files.map((value) => value.module);
     for (const module of modules)
         loadModule(init, module);
-
-    console.log("[dog] loading modules:", modules);
 }
 
 function loadModule(ctx: InitContext, constructor: ModuleConstructor) {
-    const name = fixModuleName(constructor.name);
+    const cname = constructor.name;
+    const name = fixModuleName(cname);
     if (ctx.cache[name])
         throw new Error(`Module ${name} already loaded`)
 
-    const module = new constructor();
-    defineProperty(module, "moduleName", name);
-    console.log("[dog] [module] load:", name);
+    if (!Reflect.hasMetadata(ModuleMetadataKey, constructor))
+        throw new Error(`${cname} is not a Module (no @Module decorator found)`)
 
-    initModule(ctx, module);
+    const module = new constructor();
+    defineProperty(module, "name", name);
+    defineProperty(module, "qualifiedName", cname);
+
+    const moduleCtx: ModuleContext = Object.assign({ module }, ctx.injector);
+    module.beforeInit(moduleCtx);
+    initModule(ctx, moduleCtx, Reflect.getMetadata(ModuleMetadataKey, constructor), module);
 }
 
-function initModule(ctx: InitContext, module: Module): void {
-    for (const service of module.providers())
-        ctx.injector.inject(service)
+function initModule(
+    initContext: InitContext,
+    moduleContext: ModuleContext,
+    moduleOptions: ModuleOptions,
+    module: DoguinhoModule
+): void {
+    if (moduleOptions.providers) {
+        for (const service of moduleOptions.providers)
+            initContext.injector.inject(service)
+    }
 
-    module.init(ctx.injector)
-    console.log("[dog] [module] init:", module.moduleName);
+    module.init(moduleContext)
 }
 
 function defineProperty(target: any, prop: PropertyKey, value: any): void {
@@ -70,7 +84,18 @@ function providerId(name: string, key?: ProviderKey): ProviderKey {
     return key || Symbol(name);
 }
 
-function providerMetadata<T>(name: string, key?: ProviderKey): ProviderMetadata {
+function providerMetadata<T>(name?: string, key?: ProviderKey): ProviderMetadata {
+    if (typeof name === "undefined") {
+        if (typeof key === "undefined")
+            throw new Error("Cannot create provider metadata (name and key is null)");
+
+        let name;
+        if (typeof key == "symbol")
+            name = key.description;
+
+        return { name: name || key.toString(), key };
+    }
+
     name = providerName(name);
     return { name, key: providerId(name, key) };
 }
@@ -84,22 +109,25 @@ function buildInjector(cache: InjectorCache, container: Container): Injector {
         get<T>(value: Constructor<T>): T {
             return container.get(retrieveMetadata(cache, value));
         },
-        inject<T>(value: Constructor<T>, scope?: InjectionScope, key0?: ProviderKey): void {
-            const {name, key } = providerMetadata(value.name, key0);
+        inject<T>(value: Constructor<T>, scope?: InjectionScope, key?: ProviderKey): void {
+            this.injectScoped(value, DefaultInjectionScope, key);
+        },
+        injectScoped<T>(value: Constructor<T>, scope?: InjectionScope, key0?: ProviderKey): void {
+            const { name, key } = providerMetadata(value.name, key0);
             decorate(Injectable(), value);
             cache[name] = key;
 
-            switch (scope) {
-                case "Transient": {
-                    container.bind(key).to(value).inTransientScope();
-                    break
-                }
-                case "Request": {
-                    container.bind(key).to(value).inRequestScope();
-                    break;
-                }
-                default: container.bind(key).to(value).inSingletonScope();
-            }
+            assignFn(scope, {
+                "Transient": container.bind(key).to(value).inTransientScope(),
+                "Request": container.bind(key).to(value).inRequestScope(),
+                "default": container.bind(key).to(value).inSingletonScope()
+            })
+        },
+        injectConstant<T>(value: T, key: ProviderKey): void {
+            const metadata = providerMetadata(undefined, key);
+            cache[metadata.name] = metadata.key;
+
+            container.bind(key).to(value).inSingletonScope();
         },
         injectAll(...values: Constructor[]) {
             for (const value of values)
@@ -116,10 +144,9 @@ export default (options?: DoguinhoOptions): Doguinho => {
     let containerOptions: ContainerOptions = {
         autoBindInjectable: false,
         skipBaseClassChecks: true,
-        defaultScope: "Singleton",
+        defaultScope: DefaultInjectionScope,
     };
 
-    console.log("[dog]", options, containerOptions);
     if (options && options.containerOptions)
         containerOptions = Object.assign(
             containerOptions,
@@ -134,7 +161,6 @@ export default (options?: DoguinhoOptions): Doguinho => {
     if (options) {
         if (options.autoRegister) {
             const autoRegister = options.autoRegister as any;
-            console.log("[dog] auto register options", autoRegister);
             autoLoadModules(init,
                 autoRegister.path || ".",
                 autoRegister.pattern || /^.*\.module.(ts|js)$/m
@@ -148,7 +174,7 @@ export default (options?: DoguinhoOptions): Doguinho => {
     }
 
     const registry = {
-        get(name: string): Module {
+        get(name: string): DoguinhoModule {
             return cache[name]
         },
         has(name: string): boolean {
@@ -156,7 +182,6 @@ export default (options?: DoguinhoOptions): Doguinho => {
         }
     };
 
-    console.log("[dog] started");
     return {
         container,
         injector,

@@ -26,24 +26,144 @@ $ npm install doguinho reflect-metadata inversify --save
 }
 ```
 
-## Basic usage
-### Bindings
+## Getting started
+## Creating application
+
+First, create an Doguinho instance.
+```ts
+import { createDoguinho } from "doguinho";
+
+const doguinho = createDoguinho(options);
+```
+
+You can pass [several options](https://github.com/DevNatan/doguinho/blob/3f9c44140e5661a7b80803079f17c64513d7ed05/types/index.d.ts#L15) during creation such as `router` and` store` if you want to 
+define 
+them in advance, and Doguinho will use them as the basis for defining things, if you do not provide, Doguinho will create its own.
+
+#### Add it to your Vue application
+```ts
+import Vue from "vue";
+const vm = new Vue({ doguinho });
+```
+
+> Note: you must create Doguinho before building your application.
+
+## Modules
+Modules are closed injection environments and should be used to better organize your application.
+
+To define a new module simply add the decorator `@Module` on it.
+
+```ts
+import { Module } from "doguinho";
+
+@Module()
+export default class MyModule {}
+```
+
+### Initialization handler
+In case you need to do something when the module starts, there are initialization handlers 
+`beforeInit` and `init` for you to work on.
+
+```ts
+import { Module, ModuleContext } from "doguinho";
+
+@Module({
+    onInit(context: ModuleContext): void { /* ... */ }
+})
+export default class MyModule {}
+```
+
+You can use the current context to perform manual injection, or anything else.
+```ts
+import { Module, ModuleContext } from "doguinho";
+
+@Module({
+    beforeInit(context: ModuleContext): void {
+        context.inject(Anything);
+    }
+})
+export default class MyModule {}
+```
+
+#### Use keys to inject constant, dynamic, or function values.
+```ts
+const HelloWorldKey = "hero";
+
+@Module({
+    beforeInit(context: ModuleContext): void {
+        context.injectConst("Hello world", HelloWorldKey);
+    }
+})
+export default class MyModule {}
+```
+
+#### Get values injected into the post-init handler.
+```ts
+const InitKey = "hero";
+
+@Module({
+    beforeInit(context: ModuleContext): void {
+        context.injectConstant(`Module "${context.module.name}" initialized!`, InitKey);
+    }, 
+    init(context: ModuleContext): void {
+        console.log(context.get(InitKey));
+        // prints: Module "auth" initialized
+    }
+})
+export default class AuthModule {}
+```
+
+### Providers
+Providers passed through modules are automatically injected in the context of that module.
+
+> Only classes annotated with `@Injectable` can be providers.
+
+```ts
+import { Module, Injectable } from "doguinho";
+
+@Injectable()
+export class SomeRandomService {}
+
+@Module({
+    providers: [SomeRandomService]
+})
+export default class MyModule {}
+```
+
+### Recommended project directory structure
+A recommended project structure using modules is the `feature module` which consists of a
+directory (with its own module) for each feature. Something like this:
+
+**Source directory (/src)**
+```
+├─ app/
+│  │  ├─ module-A/
+│  │  │  ├─ A.module.ts
+│  │  ├─ module-B/
+│  │  │  ├─ B.module.ts
+│  │  app.module
+│  │  App.vue
+│  ├─ main.ts
+
+```
+
+## Injection
 Inject any type of instantiable class in the context of the module.\
 Anything injected becomes *singleton* in the module context.
 
 When necessary, InversifyJS will instantiate the object and keep it available for other services.
 
 ```ts
-@Injectable() 
+@Injectable 
 export class DogService {}
 ```
 ```
-doguinho.bind(DogService);
+doguinho.inject(DogService);
 ```
 
 Inject other services available in the module into your service constructor.
 ```ts
-@Injectable() 
+@Injectable 
 export class CatsService {
 
   constructor(@Inject() private readonly dogsService: DogsService) {}
@@ -51,37 +171,36 @@ export class CatsService {
 }
 ```
 ```
-doguinho.bind(DogsService, CatsService);
+doguinho.inject(DogsService, CatsService);
 ```
 
-### Lazy Injection
-It is often not possible for InversifyJS to instantiate the object being injected, for example: Vue components or Vuex stores.\
+It is often not possible for InversifyJS to instantiate the object being injected, for example: Vue components or Vuex stores.
+
 Considering that there is no specific order of startup and that we do not know what will or will not be available or when, we created the lazy injection.
 
+### Lazy Injection
 Make a note of a property so that it becomes a getter which, when requested, will get the result late.
 
 ```
 export class Somewhere {
 
-  @LazyInject() private readonly dogsService!: DogsService
+  @Inject() private readonly dogsService!: DogsService
   
 }
 ```
 
-#### Using with `vuex-module-decorators`
+> Note: providers are searched for in their own module and then in the global context if they are not found.
+
+### Using with `vuex-module-decorators`
 ```ts
-export interface Dog { name: string, age: number };
-
 @Module
-export default class DogStore extends VuexModule {
+export default class DogsStore extends VuexModule {
 
-  // will be automatically injected when requested
-  @LazyInject() private readonly dogsService!: DogsService;
-  private dogs: Dog[] = [];
+  @Inject() private readonly dogsService!: DogsService;
   
   @Action
   public async createDog(name: string): Promise<Dog> {
-    return await this.dogsService.then((dog: Dog) => this.dogs.push(dog));
+      // do something with DogsService
   }
 
 }
@@ -89,22 +208,17 @@ export default class DogStore extends VuexModule {
 
 You can inject the store so that it will be available anywhere in the scope of that module.
 ```ts
-doguinho.bind(DogStore);
+doguinho.inject(DogStore);
 ```
 
-#### Using with `vue-class-component`
+### Using with `vue-class-component`
 ```ts
-@Component<SomeComponent>({
-  created(): void {
-    this.dogStore.createDog("Viralata Caramelo").then((dog: Dog) => {
-      console.log("Dog created", dog);
-    });
-  }
-})
+@Component
 export default class SomeComponent extends Vue {
 
-  // lazy injectins are evaluated when requested and transformed into getters
-  @LazyInject() private readonly dogStore!: DogStore;
+  @Inject() private readonly dogsStore!: DogsStore;
+  
+  /* ... do something wih DogsStore */
 
 }
 ```
