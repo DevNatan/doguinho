@@ -2,7 +2,6 @@
   "name": "doguinho",
   "version": "0.0.2",
   "description": "IoC and DI for Vue.js 2 with InversifyJS inspired by NestJS",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && npx babel --extensions \".ts\" src --out-dir lib"
@@ -27,16 +26,13 @@
     "url": "https://github.com/DevNatan/doguinho/issues"
   },
   "files": [
-    "dist/**/*",
-    "types/vue.d.ts"
+    "lib/**/*",
+    "types/index.d.ts"
   ],
   "homepage": "https://github.com/DevNatan/doguinho#readme",
   "types": "types/index.d.ts",
   "dependencies": {
-    "babel-plugin-transform-require-context": "^0.1.1",
-    "inversify": "^5.1.1",
-    "reflect-metadata": "^0.1.13",
-    "vue": "^2.6.12"
+    "babel-plugin-transform-require-context": "^0.1.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.16",
@@ -45,8 +41,13 @@
     "@babel/preset-flow": "^7.13.13",
     "@babel/preset-typescript": "^7.13.0",
     "@types/webpack-env": "^1.16.0",
-    "typescript": "^3.9.7",
+    "typescript": "^3.9.7"
+  },
+  "peerDependencies": {
+    "vue": "^2.6.12",
     "vue-router": "^3.2.0",
-    "vuex": "^3.4.0"
+    "vuex": "^3.4.0",
+    "inversify": "^5.1.1",
+    "reflect-metadata": "^0.1.13"
   }
 }
