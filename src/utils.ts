@@ -16,6 +16,6 @@ export function fixModuleName(name: string): string {
     return name.toLowerCase();
 }
 
-export function assignFn<T, K extends keyof T>(current: K, expect: T): void {
+export function assignFn<T = { [key: string]: Function }>(current: string, expect: T): void {
     (expect[current] || (expect["default"] || function() {}))();
 }

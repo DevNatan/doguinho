@@ -1,18 +1,20 @@
 import { Constructor } from "./utils";
 import { interfaces } from "inversify";
-export declare function Injectable(): ClassDecorator;
-export declare function Inject(): PropertyDecorator;
-export declare function LazyInject(): PropertyDecorator;
 export interface Injector {
     get<T>(value: Constructor<T>): T;
-    inject<T>(value: Constructor<T>, scope?: InjectionScope, key?: ProviderKey): void;
+    inject<T>(value: Constructor<T>, key?: ProviderKey): void;
+    injectScoped<T>(value: Constructor<T>, scope?: InjectionScope, key?: ProviderKey): void;
+    injectConstant<T>(value: T, key: ProviderKey): void;
     injectAll(...values: Constructor[]): void;
     injectAllScoped(scope?: InjectionScope, ...values: Constructor[]): void;
 }
-export declare type InjectionScope = interfaces.BindingScope;
 export declare type InjectorCache = {
     [name: string]: ProviderKey;
 };
+export declare type InjectionScope = interfaces.BindingScope;
+export declare const DefaultInjectionScope: InjectionScope;
+export declare function Injectable(): ClassDecorator;
+export declare function Inject(): PropertyDecorator & ParameterDecorator;
 export declare type ProviderKey = string | symbol;
 export declare type ProviderMetadata = {
     name: string;

@@ -1,6 +1,6 @@
 {
   "name": "doguinho",
-  "version": "0.0.6-0",
+  "version": "0.0.6-1",
   "description": "IoC and DI for Vue.js 2 with InversifyJS inspired by NestJS",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -45,10 +45,8 @@
     "@types/webpack-env": "^1.16.0",
     "reflect-metadata": "^0.1.13",
     "typescript": "^3.9.7",
+    "vue": "^2.6.12",
     "vue-router": "^3.2.0",
     "vuex": "^3.4.0"
-  },
-  "peerDependencies": {
-    "vue": "^2.6.12"
   }
 }

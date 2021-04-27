@@ -4,7 +4,6 @@ import {
     ModuleConstructor,
     ModuleContext,
     ModuleMetadataKey, ModuleOptions,
-    ModuleRegistry
 } from "./module";
 import {
     assignFn,
@@ -117,17 +116,18 @@ function buildInjector(cache: InjectorCache, container: Container): Injector {
             decorate(Injectable(), value);
             cache[name] = key;
 
-            assignFn(scope, {
-                "Transient": container.bind(key).to(value).inTransientScope(),
-                "Request": container.bind(key).to(value).inRequestScope(),
-                "default": container.bind(key).to(value).inSingletonScope()
-            })
+            if (scope) {
+                assignFn(scope, {
+                    "Transient": container.bind(key).to(value).inTransientScope(),
+                    "Request": container.bind(key).to(value).inRequestScope(),
+                    "default": container.bind(key).to(value).inSingletonScope()
+                })
+            }
         },
         injectConstant<T>(value: T, key: ProviderKey): void {
             const metadata = providerMetadata(undefined, key);
             cache[metadata.name] = metadata.key;
-
-            container.bind(key).to(value).inSingletonScope();
+            container.bind(key).toConstantValue(value);
         },
         injectAll(...values: Constructor[]) {
             for (const value of values)

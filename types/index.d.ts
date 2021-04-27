@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { RouterOptions } from "vue-router";
 import { Store } from "vuex";
 import { Container, interfaces } from "inversify";
