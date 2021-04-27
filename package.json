@@ -1,6 +1,6 @@
 {
   "name": "doguinho",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "IoC and DI for Vue.js 2 with InversifyJS inspired by NestJS",
   "main": "index.js",
   "scripts": {
