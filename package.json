@@ -27,7 +27,7 @@
   },
   "files": [
     "lib/**/*",
-    "types/index.d.ts"
+    "types/**/*"
   ],
   "homepage": "https://github.com/DevNatan/doguinho#readme",
   "types": "types/index.d.ts",
