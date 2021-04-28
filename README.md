@@ -1,7 +1,9 @@
 # doguinho
 IoC and DI for Vue with InversifyJS inspired by NestJS
 
+[![License](https://img.shields.io/npm/l/doguinho)](https://github.com/DevNatan/doguinho/blob/main/LICENSE)
 [![Node.js Package](https://github.com/DevNatan/doguinho/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/DevNatan/doguinho/actions/workflows/npm-publish.yml)
+[![NPM version](https://img.shields.io/npm/v/doguinho)](https://www.npmjs.com/package/doguinho)
 
 ## Requirements
 * Vue 2.x
